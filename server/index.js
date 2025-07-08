@@ -11,7 +11,7 @@ const { app, io, server } = require("./lib/socket");
 
 dotenv.config();
 
-const __dirname = path.resolve();
+
 
 app.use(
   cors({
