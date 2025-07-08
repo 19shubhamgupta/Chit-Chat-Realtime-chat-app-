@@ -1,9 +1,8 @@
 const { getUsers, getChatMessage , postMessage } = require("../controllers/messageController")
 const { checkUser } = require("../middlewares/checkUser")
 
-const expres = require('express')
-
-const messageRouter  = expres.Router()
+const express = require('express')
+const messageRouter  = express.Router()
 
 messageRouter.get('/user' , checkUser, getUsers) 
 messageRouter.get('/:id' , checkUser, getChatMessage) 
