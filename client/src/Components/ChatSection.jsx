@@ -1,8 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import Message from "./Message";
+import { Image, Send, X, ArrowLeft } from "lucide-react";
+import { FaMicrophone } from "react-icons/fa";
+
 import { useMessageStore } from "../store/messageStore";
-import { Image, Send, X } from "lucide-react";
 import { useStoreAuth } from "../store/useAuthStore";
+import GroupView from "./GroupView";
+import Userview from "./Userview";
+import toast from "react-hot-toast";
+import VoiceRecorder from "./VoiceRecorder";
 
 const ChatSection = () => {
   const {
@@ -11,13 +17,26 @@ const ChatSection = () => {
     chatingToUser,
     suscribeNewMessages,
     unsuscribeNewMessages,
+    chatMedia,
+    getMedia,
   } = useMessageStore();
-  const { authUser } = useStoreAuth();
+  const {
+    authUser,
+    onlineUsers,
+    isChattingToGroup,
+    profileClicked,
+    setprofileClicked,
+    currGrpUsers,
+  } = useStoreAuth();
+
+  const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+
   const fileInputRef = useRef(null);
   const messg = useRef();
+  const messagesEndRef = useRef(null);
 
-  // Subscribe to new messages only when a chat is open
+  // Subscribe to new messages
   useEffect(() => {
     if (!chatingToUser) return;
     const unsub = suscribeNewMessages(chatingToUser._id);
@@ -26,138 +45,252 @@ const ChatSection = () => {
       else unsuscribeNewMessages(chatingToUser._id);
     };
     // eslint-disable-next-line
-  }, [chatingToUser, suscribeNewMessages, unsuscribeNewMessages]);
+  }, [chatingToUser]);
 
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
+
+  // Fetch media when opening media tab in profile
+  useEffect(() => {
+    if (profileClicked && chatingToUser?._id) {
+      getMedia();
+    }
+  }, [profileClicked, chatingToUser?._id]);
+
+  // Image selection handler
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    if (!file.type.startsWith("image/")) {
+    if (!file || !file.type.startsWith("image/")) {
       toast.error("Please select an image file");
       return;
     }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result);
-    };
-    reader.readAsDataURL(file);
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
   };
 
+  // Remove selected image
   const removeImage = () => {
+    setImageFile(null);
     setImagePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleSendMessage = async (e) => {
+  // Send message (text + optional image)
+  const handleSendMessage = async (voiceFile = null) => {
     if (!chatingToUser) return;
-    let messge = messg.current.value;
-    if (!messge.trim() && !imagePreview) {
-      toast.error("Please enter a message or select an image");
+
+    const text = messg.current?.value?.trim() || "";
+    if (!voiceFile && !text && !imageFile) {
+      toast.error("Please enter a message");
       return;
     }
 
-    try {
-      await sendMessage(chatingToUser._id, {
-        text: messge.trim(),
-        image: imagePreview,
-      });
+    const formData = new FormData();
 
-      setImagePreview(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      if (messg.current) messg.current.value = "";
-    } catch (error) {
-      console.error("Failed to send message:", error);
+    // Validate and append text
+    if (text) {
+      formData.append("text", text);
+    }
+
+    // Validate and append image
+    if (imageFile) {
+      if (imageFile instanceof File) {
+        formData.append("image", imageFile);
+      } else {
+        toast.error("Invalid image file");
+        return;
+      }
+    }
+
+    // Validate and append voice (only if voiceFile is actually provided)
+    if (voiceFile && voiceFile instanceof Blob) {
+      const timestamp = Date.now();
+      const randomSuffix = Math.floor(Math.random() * 10000);
+      const filename = `voice_${timestamp}_${randomSuffix}.webm`;
+      formData.append("voice", voiceFile, filename);
+    }
+
+    try {
+      await sendMessage(chatingToUser._id, formData);
+      // clear inputs
+      if (messg.current) {
+        messg.current.value = "";
+      }
+      removeImage();
+    } catch (err) {
+      toast.error("Message failed");
     }
   };
 
+  const handleProfileClick = () => setprofileClicked(true);
+  const handleBack = () => setprofileClicked(false);
+
   return (
     <div className="flex flex-1 ml-2 pt-20">
-      <div className="flex flex-col flex-1 bg-gray-800 border-1 border-yellow-700 rounded-lg h-[85vh] p-4 justify-end overflow-y-auto relative">
-        <div
-          className="pb-16 overflow-auto touch-auto"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-        >
-          {/* Example messages */}
-          {chatingToUser &&
-            messages
-              .filter(
-                (msg) =>
-                  msg.senderId === chatingToUser._id ||
-                  msg.receiverId === chatingToUser._id ||
-                  msg.senderId === authUser._id
-              )
-              .map((msg, index) => (
-                <Message
-                  key={msg._id || index}
-                  text={msg.text}
-                  image={msg.image}
-                  time={msg.createdAt}
-                  isOwn={authUser._id === msg.senderId}
-                  senderImg={
-                    authUser._id === msg.senderId
-                      ? authUser.profilePicture || "/avatar.png"
-                      : chatingToUser.profilePicture || "/avatar.png"
-                  }
-                />
-              ))}
-          {!chatingToUser && (
-            <div className="w-full text-center mb-50 cursor-pointer">
-              <p className="text-3xl text-yellow-400">Ready to connect?</p>
-              <p className="text-lg text-yellow-300">
-                Select a friend and start your conversation
-              </p>
-            </div>
-          )}
-        </div>
-        {/* Image preview */}
-        {imagePreview && (
-          <div className="md:-mb-4 flex items-center gap-2 absolute left-0 right-0 bottom-20 px-4 z-10">
-            <div className="relative">
+      <div className="flex flex-col flex-1 bg-gray-800 border-yellow-700 rounded-lg h-[85vh] relative">
+        {chatingToUser && (
+          <>
+            {/* Header */}
+            <div
+              className="flex items-center gap-4 px-4 py-3 border-b border-yellow-700 bg-gray-900 rounded-t-lg absolute top-0 left-0 right-0 z-30"
+              style={{ minHeight: "64px" }}
+              onClick={!profileClicked ? handleProfileClick : undefined}
+            >
+              {profileClicked && (
+                <button
+                  className="mr-2 p-2 rounded-full hover:bg-gray-700 transition"
+                  onClick={handleBack}
+                  title="Back"
+                >
+                  <ArrowLeft className="w-5 h-5 text-yellow-300" />
+                </button>
+              )}
               <img
-                src={imagePreview}
-                alt="Preview"
-                className="w-20 h-20 object-cover rounded-lg border border-zinc-700"
+                src={chatingToUser.profilePicture || "/avatar.png"}
+                alt="Avatar"
+                className="w-12 h-12 rounded-full object-cover border border-yellow-700 mt-1 cursor-pointer"
               />
-              <button
-                onClick={removeImage}
-                className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-base-300 flex items-center justify-center"
-                type="button"
-              >
-                <X className="size-3" />
-              </button>
+              <div className="flex flex-col justify-center w-full">
+                <span className="text-lg font-semibold text-yellow-300">
+                  {isChattingToGroup
+                    ? chatingToUser.groupName
+                    : chatingToUser.fullname}
+                </span>
+                {!isChattingToGroup && (
+                  <span
+                    className={`text-xs ${
+                      onlineUsers.includes(chatingToUser._id)
+                        ? "text-green-400"
+                        : "text-gray-400"
+                    }`}
+                  >
+                    {onlineUsers.includes(chatingToUser._id)
+                      ? "Online"
+                      : "Offline"}
+                  </span>
+                )}
+                {isChattingToGroup && currGrpUsers && (
+                  <span className="text-xs text-yellow-200 mt-1 flex flex-wrap gap-2">
+                    <span className="whitespace-nowrap">You</span>
+                    {currGrpUsers
+                      .filter((u) => u._id !== authUser._id)
+                      .map((u) => (
+                        <span key={u._id} className="whitespace-nowrap">
+                          {u.fullname}
+                        </span>
+                      ))}
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
+
+            {/* Profile view */}
+            {profileClicked &&
+              (isChattingToGroup ? <GroupView /> : <Userview />)}
+
+            {/* Chat view */}
+            {!profileClicked && (
+              <>
+                <div
+                  className="flex-1 overflow-y-auto overflow-x-hidden"
+                  style={{
+                    paddingTop: "72px",
+                    paddingBottom: "60px",
+                    scrollbarWidth: "none",
+                    msOverflowStyle: "none",
+                  }}
+                >
+                  <div className="flex flex-col gap-2 px-4 pb-4">
+                    {messages
+                      .filter(
+                        (m) =>
+                          m.senderId === chatingToUser._id ||
+                          m.receiverId === chatingToUser._id ||
+                          m.senderId === authUser._id
+                      )
+                      .map((msg, idx) => (
+                        <Message
+                          key={msg._id || idx}
+                          text={msg.text}
+                          image={msg.image}
+                          time={msg.createdAt}
+                          isOwn={msg.senderId === authUser._id}
+                          voice={msg.voice}
+                          senderImg={
+                            msg.senderId === authUser._id
+                              ? authUser.profilePicture || "/avatar.png"
+                              : chatingToUser.profilePicture || "/avatar.png"
+                          }
+                        />
+                      ))}
+                    <div ref={messagesEndRef} />
+                  </div>
+                </div>
+
+                {/* Image preview */}
+                {imagePreview && (
+                  <div className="absolute left-0 right-0 bottom-20 px-4 flex items-center gap-2 z-10">
+                    <div className="relative">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-20 h-20 object-cover rounded-lg border border-zinc-700"
+                      />
+                      <button
+                        onClick={removeImage}
+                        className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gray-800 flex items-center justify-center"
+                      >
+                        <X className="w-3 h-3 text-yellow-300" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Input bar */}
+                <div className="absolute left-0 bottom-0 w-full bg-gray-800 p-3 flex items-center gap-2">
+                  <input
+                    type="text"
+                    ref={messg}
+                    placeholder="Type a message..."
+                    className="flex-1 bg-gray-800 text-yellow-200 rounded-lg px-4 py-2 border border-yellow-700 focus:outline-none focus:ring-1 focus:ring-yellow-400"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage();
+                      }
+                    }}
+                  />
+
+                  {/* Image Upload */}
+                  <label className="p-2 rounded-lg hover:bg-gray-700 transition cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      ref={fileInputRef}
+                      onChange={handleImageChange}
+                    />
+                    <Image className="w-6 h-6 text-yellow-400" />
+                  </label>
+
+                  {/* Voice Button */}
+                  <VoiceRecorder handleSendMessage={handleSendMessage} />
+                  {/* Send Button */}
+                  <button
+                    onClick={() => handleSendMessage()}
+                    className="p-2 rounded-lg hover:bg-gray-700 transition -ml-2"
+                  >
+                    <Send className="w-6 h-6 text-yellow-400" />
+                  </button>
+                </div>
+              </>
+            )}
+          </>
         )}
-        {/* Fixed bottom bar */}
-        <div className="absolute left-0 bottom-0 w-full bg-gray-800  p-3 flex items-center gap-2">
-          <input
-            type="text"
-            ref={messg}
-            placeholder="Type a message..."
-            className="flex-1 bg-gray-800 text-yellow-200 rounded-lg px-4 py-2 border border-yellow-700 focus:outline-none focus:ring-1 focus:ring-yellow-400"
-          />
-          {/* Image icon as file input */}
-          <label
-            className="p-2 rounded-lg hover:bg-gray-700 transition cursor-pointer"
-            title="Attach image"
-          >
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleImageChange}
-            />
-            <Image className="w-6 h-6 text-yellow-400" />
-          </label>
-          {/* Send icon */}
-          <button
-            className="p-2 rounded-lg hover:bg-gray-700 transition -ml-2"
-            onClick={handleSendMessage}
-            type="button"
-            title="Send message"
-          >
-            <Send className="w-6 h-6  text-yellow-400" />
-          </button>
-        </div>
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ import { useStoreAuth } from "../store/useAuthStore";
 
 function LoginPage() {
   const { register, handleSubmit } = useForm();
-  const { login, isLoggingIn, toggleNav } = useStoreAuth();
+  const { login, isLoggingIn, toggleNav, getGooglePage } = useStoreAuth();
   const navigate = useNavigate();
   useEffect(() => {
     toggleNav(false);
@@ -15,8 +15,12 @@ function LoginPage() {
     login(data).then(() => {
       toggleNav(true);
       navigate("/");
-    })
-  }; 
+    });
+  };
+
+  const handleGoogleLogin = () => {
+    getGooglePage();
+  };
 
   return (
     <div className="min-h-screen flex bg-gray-900 dark:bg-gray-900 ">
@@ -76,7 +80,7 @@ function LoginPage() {
             <button
               type="submit"
               className="w-full  bg-yellow-500 text-gray-900 font-semibold rounded-lg hover:bg-yellow-400 transition border-2 border-yellow-400 h-12"
-              disabled= {isLoggingIn}
+              disabled={isLoggingIn}
             >
               Log In
             </button>
@@ -88,7 +92,11 @@ function LoginPage() {
             <hr className="flex-grow border-yellow-700" />
           </div>
 
-          <button className="w-full py-3 flex items-center justify-center border border-yellow-400 rounded-lg hover:bg-yellow-500 hover:text-gray-900 transition bg-gray-900 text-yellow-200">
+          <button
+            onClick={handleGoogleLogin}
+            type="button"
+            className="w-full py-3 flex items-center justify-center border border-yellow-400 rounded-lg hover:bg-yellow-500 hover:text-gray-900 transition bg-gray-900 text-yellow-200"
+          >
             <img
               src="https://img.icons8.com/color/16/000000/google-logo.png"
               alt="Google"
@@ -110,7 +118,7 @@ function LoginPage() {
       </div>
       {/* Right Section - Branding (now on right) */}
       <div className="hidden md:flex md:w-[45%] items-center justify-center bg-black rounded-l-[5rem] border-4 border-yellow-500 text-yellow-200 h-screen flex-col">
-        <img src="/logo.png" alt="chit-chat-logo" className="h-30 w-55 mb-4 "/>
+        <img src="/logo.png" alt="chit-chat-logo" className="h-30 w-55 mb-4 " />
         <div className="space-y-4 text-center px-8">
           <h1 className="text-5xl font-extrabold text-yellow-400">
             Your Voice

@@ -7,7 +7,7 @@ const ConnectDB = require("./lib/db");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 
-const { app, io, server } = require("./lib/socket");
+const { app, server } = require("./lib/socket");
 
 dotenv.config();
 
@@ -20,8 +20,8 @@ app.use(
   })
 );
 app.use(cookieParser());
-app.use(express.json({ limit: "20mb" }));
-app.use(express.urlencoded({ limit: "20mb", extended: true }));
+app.use(express.json());                     
+app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/auth", authRouter);
 app.use("/api/message", messageRouter);
@@ -39,3 +39,6 @@ server.listen(PORT, () => {
   console.log(`Server is running on port http://localhost:${PORT}/api/`);
   ConnectDB();
 });
+
+
+/* "start": "npm run start --prefix server" */

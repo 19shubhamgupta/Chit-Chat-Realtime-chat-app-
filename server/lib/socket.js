@@ -1,6 +1,8 @@
 const { Server } = require("socket.io");
 const htpp = require("http");
 const express = require("express");
+const group = require("../models/group");
+const user = require("../models/user");
 
 const app = express();
 
@@ -12,18 +14,20 @@ const io = new Server(server, {
   },
 });
 
-
 // used to store online users
 const userSocketMap = {}; // {userId: socketId}
 
-io.on("connection", (socket) => {
+io.on("connection", async (socket) => {
   console.log("A user connected", socket.id);
 
   const userId = socket.handshake.query.userId;
   if (userId) userSocketMap[userId] = socket.id;
-  // io.emit() is used to send events to all the connected clients
-  io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
+  io.emit("getOnlineUsers", Object.keys(userSocketMap));
+  const { groups } = await user.findById(userId);
+  groups.forEach((grid) => {
+    socket.join(grid.toString());
+  });
   socket.on("disconnect", () => {
     delete userSocketMap[userId];
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
@@ -35,4 +39,4 @@ const getreceiverSocketId = (receiverId) => {
   return userSocketMap[receiverId];
 };
 
-module.exports = { io, app, server , getreceiverSocketId };
+module.exports = { io, app, server, getreceiverSocketId };

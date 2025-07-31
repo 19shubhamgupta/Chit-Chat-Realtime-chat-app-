@@ -1,7 +1,14 @@
 cloudinary = require("../lib/cloudinary");
+const {
+  generateState,
+  generateCodeVerifier,
+  Google,
+  decodeIdToken,
+} = require("arctic");
 const { generateToken } = require("../lib/generateToken");
 const user = require("../models/user");
 const bcrypt = require("bcryptjs");
+const { google } = require("../lib/google");
 
 exports.postLogin = async (req, res) => {
   const { email, password } = req.body;
@@ -12,12 +19,20 @@ exports.postLogin = async (req, res) => {
 
   const checkUser = await user.findOne({ email });
   if (!checkUser) {
-    res.status(400).json({ message: "Invalid Credentials" });
+    return res.status(400).json({ message: "Invalid Credentials" });
+  }
+
+  // Check if user has a password (email/password login)
+  if (!checkUser.password) {
+    return res.status(400).json({
+      message:
+        "Please login with Google. This account was created with Google.",
+    });
   }
 
   const isCorrectPassword = await bcrypt.compare(password, checkUser.password);
   if (!isCorrectPassword) {
-    res.status(400).json({ message: "Invalid Credentials" });
+    return res.status(400).json({ message: "Invalid Credentials" });
   }
 
   generateToken(checkUser._id, res);
@@ -49,6 +64,7 @@ exports.postSignup = async (req, res) => {
     fullname,
     email,
     password: hashedPassword,
+    loginSource: "chit-chat", // Set login source as email
   });
   if (newUser) {
     generateToken(newUser._id, res);
@@ -58,6 +74,7 @@ exports.postSignup = async (req, res) => {
       fullname: newUser.fullname,
       email: newUser.email,
       profilePicture: newUser.profilePicture,
+      loginSource: newUser.loginSource,
     });
   } else {
     return res.status(500).json({ message: "Error creating user" });
@@ -72,14 +89,14 @@ exports.postLogout = (req, res) => {
 };
 
 // At top of the file
-// …  
+// …
 
 exports.updatePicture = async (req, res) => {
   try {
-    const currentUser = req.user;            // the logged-in user document
+    const currentUser = req.user; // the logged-in user document
     const { profilePicture } = req.body;
     if (!profilePicture) {
-      return res.status(400).json({ message: 'Profile picture is required' });
+      return res.status(400).json({ message: "Profile picture is required" });
     }
 
     // Upload to Cloudinary
@@ -99,11 +116,10 @@ exports.updatePicture = async (req, res) => {
       profilePicture: updatedUser.profilePicture,
     });
   } catch (err) {
-    console.error('Error in updatePicture:', err);
-    return res.status(500).json({ message: 'Error updating profile picture' });
+    console.error("Error in updatePicture:", err);
+    return res.status(500).json({ message: "Error updating profile picture" });
   }
 };
-
 
 exports.checkAuth = (req, res) => {
   try {
@@ -111,5 +127,122 @@ exports.checkAuth = (req, res) => {
   } catch (error) {
     console.log("Error in checkAuth controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+exports.getGoogle = (req, res) => {
+  try {
+    const state = generateState();
+    const codeVerifier = generateCodeVerifier();
+    const url = google.createAuthorizationURL(state, codeVerifier, [
+      "openid",
+      "profile",
+      "email",
+    ]);
+
+    res.cookie("google_oath_state", state, {
+      maxAge: 10 * 60 * 1000, // 10 minutes (shorter for security)
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax", // More permissive for development
+    });
+    res.cookie("google_code_verifier", codeVerifier, {
+      maxAge: 10 * 60 * 1000, // 10 minutes (shorter for security)
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax", // More permissive for development
+    });
+
+    res.redirect(url.toString());
+  } catch (error) {
+    console.error("Error in getGoogle:", error);
+    res.status(500).json({ message: "Failed to initiate Google OAuth" });
+  }
+};
+
+exports.getGoogleCallback = async (req, res) => {
+  try {
+    const { code, state } = req.query;
+    const {
+      google_oath_state: storedState,
+      google_code_verifier: codeVerifier,
+    } = req.cookies;
+
+    // More detailed validation
+    if (!code) {
+      return res.redirect(`http://localhost:5173/?login=error&reason=no_code`);
+    }
+
+    if (!state) {
+      return res.redirect(`http://localhost:5173/?login=error&reason=no_state`);
+    }
+
+    if (!storedState) {
+      return res.redirect(
+        `http://localhost:5173/?login=error&reason=no_stored_state`
+      );
+    }
+
+    if (!codeVerifier) {
+      return res.redirect(
+        `http://localhost:5173/?login=error&reason=no_verifier`
+      );
+    }
+
+    if (state !== storedState) {
+      return res.redirect(
+        `http://localhost:5173/?login=error&reason=state_mismatch`
+      );
+    }
+
+    let tokens;
+    try {
+      tokens = await google.validateAuthorizationCode(code, codeVerifier);
+    } catch (error) {
+      console.error("Error validating authorization code:", error);
+      return res.redirect(
+        `http://localhost:5173/?login=error&reason=token_exchange_failed`
+      );
+    }
+
+    const claims = decodeIdToken(tokens.idToken());
+    const { sub: googleUserId, email, name } = claims;
+
+    // Check if user already exists with Google ID
+    let userData = await user.findOne({ googleId: googleUserId });
+
+    if (!userData) {
+      // Check if user exists with same email but different login source
+      userData = await user.findOne({ email: email });
+
+      if (userData) {
+        // User exists with email login, ADD Google without changing login source
+        userData.googleId = googleUserId;
+        await userData.save();
+      } else {
+        // Create new user for Google login
+        userData = new user({
+          fullname: name,
+          email: email,
+          googleId: googleUserId,
+          loginSource: "google",
+          profilePicture: "/images/defaultProfilePic",
+        });
+        await userData.save();
+      }
+    }
+
+    // Clear OAuth cookies
+    res.clearCookie("google_oath_state");
+    res.clearCookie("google_code_verifier");
+
+    // Generate JWT token
+    generateToken(userData._id, res);
+
+    // Redirect to frontend with success
+    res.redirect(`http://localhost:5173/?login=success`);
+  } catch (error) {
+    console.error("Error in Google callback:", error);
+    res.redirect(`http://localhost:5173/?login=error&reason=server_error`);
   }
 };

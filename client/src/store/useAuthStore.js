@@ -3,7 +3,8 @@ import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 
-const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5001" : "/";
+const BASE_URL =
+  import.meta.env.MODE === "development" ? "http://localhost:5001" : "/";
 
 export const useStoreAuth = create((set, get) => ({
   authUser: null,
@@ -13,12 +14,45 @@ export const useStoreAuth = create((set, get) => ({
   isUpdatingProfile: false,
   showNavBar: true,
   onlineUsers: [],
+  currGrpUsers: [],
+  isChattingToGroup: false,
   socket: null,
+  profileClicked: false,
 
+  getGooglePage: () => {
+    try {
+      const url = `${BASE_URL}/api/auth/google`;
+      window.location.href = url;
+    } catch (err) {
+      toast.error("Failed to initiate Google login");
+    }
+  },
+  setprofileClicked: (val) => {
+    set({ profileClicked: val });
+  },
   toggleNav: (val) => {
     set({ showNavBar: val });
   },
-
+  toggleChattingToGroup: (val) => {
+    set({ isChattingToGroup: val });
+  },
+  getGroupChatUsers: async (grpid) => {
+    try {
+      const res = await axiosInstance.get(`/message/group/getUsers/${grpid}`);
+      console.log("/auth/google", res.data);
+      set({ currGrpUsers: res.data });
+    } catch (err) {
+      if (err.response) {
+        // Server responded with a status outside 2xx
+        toast.error(
+          err.response.data?.message || "Failed to get Group deatils"
+        );
+      } else {
+        // Network error or no response
+        toast.error("Network error — please try again");
+      }
+    }
+  },
   checkAuth: async () => {
     set({ isCheckingAuth: true });
     try {

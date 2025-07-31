@@ -13,11 +13,28 @@ const userSchemsa = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: false, // Not required for Google OAuth users
     },
     profilePicture: {
       type: String,
       default: "/images/defaultProfilePic",
+    },
+    groups: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Group",
+        default: [],
+      },
+    ],
+    loginSource: {
+      type: String,
+      enum: ["chit-chat", "google", 'github'],
+      default: "chit-chat",
+    },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true, // Allows null values but ensures uniqueness when present
     },
   },
   {

@@ -9,11 +9,17 @@ const messageSchema = new mongoose.Schema(
     },
     receiverId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      refPath: "recModel",
       required: true,
+    },
+    recModel : {
+      type : String,
+      required : true ,
+      enum : ['User' , 'Group']
     },
     text: String,
     image: String,
+    voice : String,
   },
   {
     timestamps: true,

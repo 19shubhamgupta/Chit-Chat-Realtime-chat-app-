@@ -6,7 +6,7 @@ import { useStoreAuth } from "../store/useAuthStore";
 function SignupPage() {
   const { register, handleSubmit } = useForm();
   const navigate = useNavigate();
-  const { signup, isSigningUp, toggleNav } = useStoreAuth();
+  const { signup, isSigningUp, toggleNav , getGooglePage } = useStoreAuth();
 
   useEffect(() => {
     toggleNav(false);
@@ -19,6 +19,10 @@ function SignupPage() {
     });
   };
 
+  const handlegoogle = () => {
+    console.log('getgooleclicked');
+    getGooglePage();
+  }
   return (
     <div className=" flex bg-gray-900 dark:bg-gray-900 ">
       {/* Left Section - Branding */}
@@ -126,7 +130,9 @@ function SignupPage() {
             <hr className="flex-grow border-yellow-700" />
           </div>
 
-          <button className="w-full py-3 flex items-center justify-center border border-yellow-400 rounded-lg hover:bg-yellow-500 hover:text-gray-900 transition bg-gray-900 text-yellow-200">
+          <button className="w-full py-3 flex items-center justify-center border border-yellow-400 rounded-lg hover:bg-yellow-500 hover:text-gray-900 transition bg-gray-900 text-yellow-200"
+          onClick={handlegoogle}
+          >
             <img
               src="https://img.icons8.com/color/16/000000/google-logo.png"
               alt="Google"

@@ -36,7 +36,7 @@ const NavBar = () => {
               <span className="hidden sm:inline">Settings</span>
             </Link>
 
-            {authUser && (
+            {authUser ? (
               <>
                 <Link to={"/profile"} className={`btn btn-sm gap-2`}>
                   <User className="size-5" />
@@ -47,6 +47,15 @@ const NavBar = () => {
                   <LogOut className="size-5" />
                   <span className="hidden sm:inline">Logout</span>
                 </button>
+              </>
+            ) : (
+              <>
+                <Link to={"/signup"} className={`btn btn-sm gap-2`}>
+                  <span className="hidden sm:inline">Sign Up</span>
+                </Link>
+                <Link to={"/login"} className={`btn btn-sm gap-2`}>
+                  <span className="hidden sm:inline">Login</span>
+                </Link>
               </>
             )}
           </div>
