@@ -11,16 +11,17 @@ const { app, server } = require("./lib/socket");
 
 dotenv.config();
 
-
-
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin:
+      process.env.NODE_ENV === "production"
+        ? process.env.CLIENT_URL
+        : "http://localhost:5173",
     credentials: true,
   })
 );
 app.use(cookieParser());
-app.use(express.json());                     
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/auth", authRouter);
@@ -39,6 +40,5 @@ server.listen(PORT, () => {
   console.log(`Server is running on port http://localhost:${PORT}/api/`);
   ConnectDB();
 });
-
 
 /* "start": "npm run start --prefix server" */
