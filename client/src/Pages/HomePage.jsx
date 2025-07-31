@@ -13,7 +13,7 @@ const HomePage = () => {
   return (
     authUser && (
       <div className="">
-        <div className="flex h-screen bg-base-300 md:px-50">
+        <div className="flex h-screen bg-slate-900 md:px-50 ">
           <UserSideBar />
           {!chatingToUser && !isCreatingGroups ? (
             <WelcomeMsg />
