@@ -111,7 +111,6 @@ export const useMessageStore = create((set, get) => ({
         `/message/media/${get().chatingToUser._id}`
       );
       set({ chatMedia: media.data });
-      console.log("Media loaded:", get().chatMedia);
     } catch (err) {
       if (err.response) {
         toast.error(err.response.data?.message || "Failed to get media");
@@ -151,15 +150,11 @@ export const useMessageStore = create((set, get) => ({
     set((state) => ({
       addedMembers: state.addedMembers.filter((mem) => mem.id !== id),
     }));
-    const { addedMembers } = get();
-    console.log("from remove member", addedMembers);
   },
   addMembers: (data) => {
     set((state) => ({
       addedMembers: [...state.addedMembers, data],
     }));
-    const { addedMembers } = get();
-    console.log(addedMembers);
   },
   getGroups: async () => {
     try {
@@ -167,7 +162,6 @@ export const useMessageStore = create((set, get) => ({
       set({
         groups: res.data,
       });
-      console.log("Groups loaded:", res.data);
     } catch (err) {
       if (err.response) {
         toast.error(err.response.data?.message || "Failed to load groups");

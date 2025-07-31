@@ -27,9 +27,6 @@ const UserSideBar = () => {
     getGroups();
   }, [getUsers, getGroups]);
 
-  // console.log("groups are :",groups);
-  //   console.log("users are :",users);
-
   const handleCreateGroupClicked = () => {
     setisCreatingGroups(true);
   };
@@ -83,11 +80,11 @@ const UserSideBar = () => {
               id={group._id}
               name={group.groupName || "Group"}
               imgSrc={group.profilePicture || "/avatar.png"}
-              isgrp = {true}
+              isgrp={true}
               grpDesc={group.description || " "}
               isOnline={false}
-              admin = {group.admin}
-              grpuser = {group.groupuser}
+              admin={group.admin}
+              grpuser={group.groupuser}
             />
           ))}
         {users.map((user) => (

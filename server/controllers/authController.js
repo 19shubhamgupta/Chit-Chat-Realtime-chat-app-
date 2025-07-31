@@ -170,28 +170,28 @@ exports.getGoogleCallback = async (req, res) => {
 
     // More detailed validation
     if (!code) {
-      return res.redirect(`http://localhost:5173/?login=error&reason=no_code`);
+      return res.redirect(`https://chit-chat-realtime-chat-app-2.onrender.com/?login=error&reason=no_code`);
     }
 
     if (!state) {
-      return res.redirect(`http://localhost:5173/?login=error&reason=no_state`);
+      return res.redirect(`https://chit-chat-realtime-chat-app-2.onrender.com/?login=error&reason=no_state`);
     }
 
     if (!storedState) {
       return res.redirect(
-        `http://localhost:5173/?login=error&reason=no_stored_state`
+        `https://chit-chat-realtime-chat-app-2.onrender.com/?login=error&reason=no_stored_state`
       );
     }
 
     if (!codeVerifier) {
       return res.redirect(
-        `http://localhost:5173/?login=error&reason=no_verifier`
+        `https://chit-chat-realtime-chat-app-2.onrender.com/?login=error&reason=no_verifier`
       );
     }
 
     if (state !== storedState) {
       return res.redirect(
-        `http://localhost:5173/?login=error&reason=state_mismatch`
+        `https://chit-chat-realtime-chat-app-2.onrender.com/?login=error&reason=state_mismatch`
       );
     }
 
@@ -201,7 +201,7 @@ exports.getGoogleCallback = async (req, res) => {
     } catch (error) {
       console.error("Error validating authorization code:", error);
       return res.redirect(
-        `http://localhost:5173/?login=error&reason=token_exchange_failed`
+        `https://chit-chat-realtime-chat-app-2.onrender.com/?login=error&reason=token_exchange_failed`
       );
     }
 
@@ -240,9 +240,9 @@ exports.getGoogleCallback = async (req, res) => {
     generateToken(userData._id, res);
 
     // Redirect to frontend with success
-    res.redirect(`http://localhost:5173/?login=success`);
+    res.redirect(`https://chit-chat-realtime-chat-app-2.onrender.com/?login=success`);
   } catch (error) {
     console.error("Error in Google callback:", error);
-    res.redirect(`http://localhost:5173/?login=error&reason=server_error`);
+    res.redirect(`https://chit-chat-realtime-chat-app-2.onrender.com/?login=error&reason=server_error`);
   }
 };

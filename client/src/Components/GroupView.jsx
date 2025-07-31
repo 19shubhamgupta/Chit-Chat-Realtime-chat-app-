@@ -14,11 +14,10 @@ const GroupView = () => {
 
   useEffect(() => {
     setShowDelOption(authUser._id === group?.admin);
-     getMedia();
-  }, [authUser._id, group?.admin ]);
+    getMedia();
+  }, [authUser._id, group?.admin]);
 
   const onRemoveUser = (userId) => {
-    console.log("Removing user with ID:", userId);
     removeMember(userId, group._id);
   };
 
@@ -52,7 +51,7 @@ const GroupView = () => {
       <div className="flex gap-2 mb-4">
         {["members", "chatMedia"].map((tab) => (
           <button
-            key={tab }
+            key={tab}
             onClick={() => handleTabClick(tab)}
             className={`px-4 py-2 rounded-t-lg font-semibold border-b-2 transition ${
               activeTab === tab
@@ -60,7 +59,7 @@ const GroupView = () => {
                 : "border-transparent text-gray-400"
             }`}
           >
-            {tab === "chatMedia" ? 'Media' : "Members"}
+            {tab === "chatMedia" ? "Media" : "Members"}
           </button>
         ))}
       </div>
@@ -121,19 +120,18 @@ const GroupView = () => {
 
       {activeTab === "chatMedia" && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-2">
-          {
-            chatMedia.map((media, idx) => (
-              <div
-                key={media._id}
-                className="bg-gray-900 rounded-lg p-2 border border-yellow-700 flex items-center justify-center h-32"
-              >
-                <img
-                  src={media.image}
-                  alt="chatMedia"
-                  className="object-cover w-full h-full rounded-md"
-                />
-              </div>
-            ))}
+          {chatMedia.map((media, idx) => (
+            <div
+              key={media._id}
+              className="bg-gray-900 rounded-lg p-2 border border-yellow-700 flex items-center justify-center h-32"
+            >
+              <img
+                src={media.image}
+                alt="chatMedia"
+                className="object-cover w-full h-full rounded-md"
+              />
+            </div>
+          ))}
         </div>
       )}
       <div className="w-full text-center mt-4">

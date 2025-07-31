@@ -14,10 +14,8 @@ exports.getUsers = async (req, res) => {
     const allUsers = await User.find({ _id: { $ne: me._id } }).select(
       "-password"
     );
-    console.log("getUsers › allUsers:", allUsers);
     return res.status(200).json(allUsers);
   } catch (err) {
-    console.error("Error in getUsers controller:", err);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -26,7 +24,6 @@ exports.getChatMessage = async (req, res) => {
   try {
     const recId = req.params.id;
     const senId = req.user._id;
-    console.log("getChatMessage › incoming:", { recId, senId });
 
     const checkgrp = await group.findById(recId);
     let messages = [];
@@ -44,7 +41,6 @@ exports.getChatMessage = async (req, res) => {
     }
     return res.status(200).json(messages);
   } catch (err) {
-    console.error("Error in getChatMessage controller:", err);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -76,7 +72,6 @@ exports.postMessage = async (req, res) => {
       try {
         imageUrl = await uploadFromBuffer();
       } catch (uploadErr) {
-        console.error("Cloudinary upload failed:", uploadErr);
         return res.status(400).json({ message: "Invalid image upload" });
       }
     }
@@ -135,7 +130,6 @@ exports.postMessage = async (req, res) => {
 
     return res.status(200).json(newMsg);
   } catch (err) {
-    console.error("Error in postMessage controller:", err);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -144,8 +138,6 @@ exports.getMedia = async (req, res) => {
   try {
     const recId = req.params.id;
     const senId = req.user._id;
-
-    console.log("getMedia › incoming:", { recId, senId });
 
     const media = await Message.find({
       $or: [
@@ -158,7 +150,6 @@ exports.getMedia = async (req, res) => {
 
     return res.status(200).json(media);
   } catch (err) {
-    console.error("Error in getMedia controller:", err);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };

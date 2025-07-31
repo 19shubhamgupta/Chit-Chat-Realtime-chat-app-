@@ -4,8 +4,13 @@ import { useMessageStore } from "../store/messageStore";
 import { useStoreAuth } from "../store/useAuthStore";
 
 const CreateGroup = () => {
-  const { createGroup, setisAddingMember, isaddingMember, addedMembers , setisCreatingGroups } =
-    useMessageStore();
+  const {
+    createGroup,
+    setisAddingMember,
+    isaddingMember,
+    addedMembers,
+    setisCreatingGroups,
+  } = useMessageStore();
   const { authUser } = useStoreAuth();
   const dummyUsers = [
     {
@@ -72,7 +77,6 @@ const CreateGroup = () => {
       profilePicture: base64Image,
       groupuser: members,
     };
-    console.log(data);
     await createGroup(data);
   };
 
@@ -204,7 +208,7 @@ const CreateGroup = () => {
             type="button"
             className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 rounded-lg shadow transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
             onClick={() => {
-              setisCreatingGroups(false)
+              setisCreatingGroups(false);
               setisAddingMember(false);
             }}
           >

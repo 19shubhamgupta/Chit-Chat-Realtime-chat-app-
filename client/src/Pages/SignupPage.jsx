@@ -20,7 +20,6 @@ function SignupPage() {
   };
 
   const handlegoogle = () => {
-    console.log("getgooleclicked");
     getGooglePage();
   };
   return (

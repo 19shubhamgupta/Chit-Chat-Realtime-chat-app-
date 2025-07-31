@@ -17,14 +17,16 @@ const VoiceRecorder = ({ handleSendMessage }) => {
       };
 
       mediaRecorderRef.current.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: "audio/webm",
+        });
         handleSendMessage(audioBlob);
       };
 
       mediaRecorderRef.current.start();
       setRecording(true);
     } catch (err) {
-      console.error("Mic access denied:", err);
+      // Handle microphone access error silently
     }
   };
 
@@ -40,7 +42,9 @@ const VoiceRecorder = ({ handleSendMessage }) => {
       onMouseDown={startRecording}
       onMouseUp={stopRecording}
       onMouseLeave={stopRecording}
-      className={`p-2 rounded-lg transition ${recording ? "bg-red-700" : "hover:bg-gray-700"}`}
+      className={`p-2 rounded-lg transition ${
+        recording ? "bg-red-700" : "hover:bg-gray-700"
+      }`}
       title="Hold to record"
     >
       <FaMicrophone className="w-6 h-6 text-yellow-400" />

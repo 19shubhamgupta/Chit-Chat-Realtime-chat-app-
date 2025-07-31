@@ -39,7 +39,6 @@ export const useStoreAuth = create((set, get) => ({
   getGroupChatUsers: async (grpid) => {
     try {
       const res = await axiosInstance.get(`/message/group/getUsers/${grpid}`);
-      console.log("/auth/google", res.data);
       set({ currGrpUsers: res.data });
     } catch (err) {
       if (err.response) {
@@ -155,7 +154,6 @@ export const useStoreAuth = create((set, get) => ({
     set({ socket: socket });
 
     socket.on("getOnlineUsers", (userIds) => {
-      console.log("Online Users in useAuthStore : ", userIds);
       set({ onlineUsers: userIds });
     });
   },

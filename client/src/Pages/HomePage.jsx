@@ -9,7 +9,6 @@ import WelcomeMsg from "../Components/WelcomeMsg";
 const HomePage = () => {
   const { authUser } = useStoreAuth();
   const { isCreatingGroups, chatingToUser } = useMessageStore();
-  console.log(isCreatingGroups);
   return (
     authUser && (
       <div className="min-h-screen bg-gray-900">
