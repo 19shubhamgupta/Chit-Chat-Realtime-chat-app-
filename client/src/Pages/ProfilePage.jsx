@@ -22,14 +22,13 @@ const ProfilePage = () => {
   };
   return (
     authUser && (
-      <div>
-        <div className="pt-10">
-          <div className="max-w-2xl mx-auto p-4 py-8 ">
-            <div className="bg-base-300 rounded-xl p-6 space-y-8">
-              <div className="text-center">
-                <h1 className="text-2xl font-semibold ">Profile</h1>
-                <p className="mt-2">Your profile information</p>
-              </div>
+      <div className="min-h-screen bg-gray-900 pt-16">
+        <div className="max-w-2xl mx-auto p-4 py-8">
+          <div className="bg-gray-800 rounded-xl p-6 space-y-8 border border-gray-700 shadow-xl">
+            <div className="text-center">
+              <h1 className="text-2xl font-semibold text-white">Profile</h1>
+              <p className="mt-2 text-gray-400">Your profile information</p>
+            </div>
 
               {/* avatar upload section */}
 
@@ -46,15 +45,15 @@ const ProfilePage = () => {
                     htmlFor="avatar-upload"
                     className={`
                   absolute bottom-0 right-0 
-                  bg-base-content hover:scale-105
+                  bg-blue-600 hover:bg-blue-700 hover:scale-105
                   p-2 rounded-full cursor-pointer 
-                  transition-all duration-200
+                  transition-all duration-200 shadow-lg
                   ${
                     isUpdatingProfile ? "animate-pulse pointer-events-none" : ""
                   }
                 `}
                   >
-                    <Camera className="w-5 h-5 text-base-200" />
+                    <Camera className="w-5 h-5 text-white" />
                     <input
                       type="file"
                       id="avatar-upload"
@@ -65,7 +64,7 @@ const ProfilePage = () => {
                     />
                   </label>
                 </div>
-                <p className="text-sm text-zinc-400">
+                <p className="text-sm text-gray-400">
                   {isUpdatingProfile
                     ? "Uploading..."
                     : "Click the camera icon to update your photo"}
@@ -74,45 +73,47 @@ const ProfilePage = () => {
 
               <div className="space-y-6">
                 <div className="space-y-1.5">
-                  <div className="text-sm text-zinc-400 flex items-center gap-2">
+                  <div className="text-sm text-gray-400 flex items-center gap-2">
                     <User className="w-4 h-4" />
                     Full Name
                   </div>
-                  <p className="px-4 py-2.5 bg-base-200 rounded-lg border">
+                  <p className="px-4 py-2.5 bg-gray-700 rounded-lg border border-gray-600 text-white">
                     {authUser?.fullname}
                   </p>
                 </div>
 
                 <div className="space-y-1.5">
-                  <div className="text-sm text-zinc-400 flex items-center gap-2">
+                  <div className="text-sm text-gray-400 flex items-center gap-2">
                     <Mail className="w-4 h-4" />
                     Email Address
                   </div>
-                  <p className="px-4 py-2.5 bg-base-200 rounded-lg border">
+                  <p className="px-4 py-2.5 bg-gray-700 rounded-lg border border-gray-600 text-white">
                     {authUser?.email}
                   </p>
                 </div>
               </div>
 
-              <div className="-mt-5 bg-base-300 rounded-xl p-2">
-                <h2 className="text-lg font-medium  mb-2">
+              <div className="bg-gray-700 rounded-xl p-4 border border-gray-600">
+                <h2 className="text-lg font-medium text-white mb-4">
                   Account Information
                 </h2>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center justify-between py-2 border-b border-zinc-700">
-                    <span>Member Since</span>
-                    <span>{authUser.createdAt?.split("T")[0]}</span>
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center justify-between py-2 border-b border-gray-600">
+                    <span className="text-gray-400">Member Since</span>
+                    <span className="text-white">
+                      {authUser.createdAt?.split("T")[0]}
+                    </span>
                   </div>
-                  <div className="flex items-center justify-between ">
-                    <span>Account Status</span>
-                    <span className="text-green-500">Active</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400">Account Status</span>
+                    <span className="text-green-400 font-medium">Active</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      
     )
   );
 };

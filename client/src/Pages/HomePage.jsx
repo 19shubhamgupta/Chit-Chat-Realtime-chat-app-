@@ -12,8 +12,8 @@ const HomePage = () => {
   console.log(isCreatingGroups);
   return (
     authUser && (
-      <div className="">
-        <div className="flex h-screen bg-slate-900 md:px-50 ">
+      <div className="min-h-screen bg-gray-900">
+        <div className="flex h-screen md:px-50">
           <UserSideBar />
           {!chatingToUser && !isCreatingGroups ? (
             <WelcomeMsg />
