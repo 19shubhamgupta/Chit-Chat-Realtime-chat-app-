@@ -141,16 +141,18 @@ exports.getGoogle = (req, res) => {
     ]);
 
     res.cookie("google_oath_state", state, {
-      maxAge: 10 * 60 * 1000, // 10 minutes (shorter for security)
+      maxAge: 10 * 60 * 1000, // 10 minutes
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax", // More permissive for development
+      sameSite: "lax", // Always use lax for OAuth (strict breaks OAuth flow)
+      path: "/",
     });
     res.cookie("google_code_verifier", codeVerifier, {
-      maxAge: 10 * 60 * 1000, // 10 minutes (shorter for security)
+      maxAge: 10 * 60 * 1000, // 10 minutes
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax", // More permissive for development
+      sameSite: "lax", // Always use lax for OAuth (strict breaks OAuth flow)
+      path: "/",
     });
 
     res.redirect(url.toString());
@@ -168,31 +170,42 @@ exports.getGoogleCallback = async (req, res) => {
       google_code_verifier: codeVerifier,
     } = req.cookies;
 
-    // More detailed validation
+    // Get the correct redirect URL based on environment
+    const frontendURL =
+      process.env.NODE_ENV === "production"
+        ? "https://chit-chat-realtime-chat-app-2.onrender.com"
+        : "http://localhost:5173";
+
+    // More detailed validation with logging
     if (!code) {
-      return res.redirect(`https://chit-chat-realtime-chat-app-2.onrender.com/?login=error&reason=no_code`);
+      return res.redirect(`${frontendURL}/?login=error&reason=no_code`);
     }
 
     if (!state) {
-      return res.redirect(`https://chit-chat-realtime-chat-app-2.onrender.com/?login=error&reason=no_state`);
+      return res.redirect(`${frontendURL}/?login=error&reason=no_state`);
     }
 
     if (!storedState) {
-      return res.redirect(
-        `https://chit-chat-realtime-chat-app-2.onrender.com/?login=error&reason=no_stored_state`
+      // Log for debugging
+      console.log(
+        "Missing stored state. Available cookies:",
+        Object.keys(req.cookies)
       );
+      return res.redirect(`${frontendURL}/?login=error&reason=no_stored_state`);
     }
 
     if (!codeVerifier) {
-      return res.redirect(
-        `https://chit-chat-realtime-chat-app-2.onrender.com/?login=error&reason=no_verifier`
-      );
+      return res.redirect(`${frontendURL}/?login=error&reason=no_verifier`);
     }
 
     if (state !== storedState) {
-      return res.redirect(
-        `https://chit-chat-realtime-chat-app-2.onrender.com/?login=error&reason=state_mismatch`
+      console.log(
+        "State mismatch - Expected:",
+        storedState,
+        "Received:",
+        state
       );
+      return res.redirect(`${frontendURL}/?login=error&reason=state_mismatch`);
     }
 
     let tokens;
@@ -201,7 +214,7 @@ exports.getGoogleCallback = async (req, res) => {
     } catch (error) {
       console.error("Error validating authorization code:", error);
       return res.redirect(
-        `https://chit-chat-realtime-chat-app-2.onrender.com/?login=error&reason=token_exchange_failed`
+        `${frontendURL}/?login=error&reason=token_exchange_failed`
       );
     }
 
@@ -240,9 +253,9 @@ exports.getGoogleCallback = async (req, res) => {
     generateToken(userData._id, res);
 
     // Redirect to frontend with success
-    res.redirect(`https://chit-chat-realtime-chat-app-2.onrender.com/?login=success`);
+    res.redirect(`${frontendURL}/?login=success`);
   } catch (error) {
     console.error("Error in Google callback:", error);
-    res.redirect(`https://chit-chat-realtime-chat-app-2.onrender.com/?login=error&reason=server_error`);
+    res.redirect(`${frontendURL}/?login=error&reason=server_error`);
   }
 };
