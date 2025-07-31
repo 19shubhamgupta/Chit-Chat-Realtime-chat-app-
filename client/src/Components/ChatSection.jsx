@@ -1,12 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import Message from "./Message";
 import { Image, Send, X, ArrowLeft } from "lucide-react";
-import { FaMicrophone } from "react-icons/fa";
 
 import { useMessageStore } from "../store/messageStore";
 import { useStoreAuth } from "../store/useAuthStore";
 import GroupView from "./GroupView";
-import Userview from "./Userview";
+import UserView from "./UserView";
 import toast from "react-hot-toast";
 import VoiceRecorder from "./VoiceRecorder";
 
@@ -190,7 +189,7 @@ const ChatSection = () => {
 
             {/* Profile view */}
             {profileClicked &&
-              (isChattingToGroup ? <GroupView /> : <Userview />)}
+              (isChattingToGroup ? <GroupView /> : <UserView />)}
 
             {/* Chat view */}
             {!profileClicked && (
