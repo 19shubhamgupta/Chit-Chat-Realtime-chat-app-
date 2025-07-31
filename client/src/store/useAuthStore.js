@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 
 const BASE_URL =
-  import.meta.env.MODE === "development" ? "http://localhost:5001" : "/";
+  import.meta.env.MODE === "development" ? "http://localhost:5001" : "https://chit-chat-realtime-chat-app-2.onrender.com";
 
 export const useStoreAuth = create((set, get) => ({
   authUser: null,
